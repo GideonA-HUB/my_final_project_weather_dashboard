@@ -1,9 +1,21 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
 
-@layer base {
-  body {
-    @apply bg-gradient-to-br from-weather-blue to-weather-light-blue min-h-screen;
-  }
+body {
+  background: linear-gradient(135deg, #3B82F6, #60A5FA);
+  min-height: 100vh;
+  font-family: system-ui, -apple-system, sans-serif;
+  color: white;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }

@@ -1,157 +1,146 @@
-import React, { useState, useEffect } from 'react';
-import SearchBar from './components/SearchBar';
-import WeatherCard from './components/WeatherCard';
-import ForecastList from './components/ForecastList';
-import ErrorMessage from './components/ErrorMessage';
-import LoadingSpinner from './components/LoadingSpinner';
-import DemoWeather from './components/DemoWeather';
-import { API_KEY, API_BASE_URL } from './config/api';
+import React, { useState } from 'react';
 
 function App() {
   const [weather, setWeather] = useState(null);
-  const [forecast, setForecast] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Function to fetch current weather
-  const fetchCurrentWeather = async (city) => {
-    try {
-      const response = await fetch(
-        `${API_BASE_URL}/weather?q=${city}&appid=${API_KEY}&units=metric`
-      );
-      
-      if (!response.ok) {
-        if (response.status === 404) {
-          throw new Error('City not found. Please check the spelling and try again.');
-        }
-        throw new Error('Failed to fetch weather data. Please try again.');
-      }
-      
-      const data = await response.json();
-      
-      return {
-        city: data.name,
-        country: data.sys.country,
-        temperature: data.main.temp,
-        feelsLike: data.main.feels_like,
-        humidity: data.main.humidity,
-        windSpeed: data.wind.speed,
-        condition: data.weather[0].description,
-        icon: data.weather[0].icon,
-      };
-    } catch (error) {
-      throw error;
-    }
-  };
-
-  // Function to fetch 3-day forecast
-  const fetchForecast = async (city) => {
-    try {
-      const response = await fetch(
-        `${API_BASE_URL}/forecast?q=${city}&appid=${API_KEY}&units=metric`
-      );
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch forecast data.');
-      }
-      
-      const data = await response.json();
-      
-      // Group forecast by day and get daily max/min temps
-      const dailyForecasts = {};
-      
-      data.list.forEach(item => {
-        const date = new Date(item.dt * 1000).toDateString();
-        if (!dailyForecasts[date]) {
-          dailyForecasts[date] = {
-            date: item.dt_txt.split(' ')[0],
-            maxTemp: item.main.temp_max,
-            minTemp: item.main.temp_min,
-            condition: item.weather[0].description,
-          };
-        } else {
-          dailyForecasts[date].maxTemp = Math.max(dailyForecasts[date].maxTemp, item.main.temp_max);
-          dailyForecasts[date].minTemp = Math.min(dailyForecasts[date].minTemp, item.main.temp_min);
-        }
-      });
-      
-      // Return next 3 days
-      return Object.values(dailyForecasts).slice(1, 4);
-    } catch (error) {
-      throw error;
-    }
-  };
-
-  // Handle search functionality
   const handleSearch = async (city) => {
     setLoading(true);
     setError('');
-    setWeather(null);
-    setForecast([]);
-
     try {
-      const [weatherData, forecastData] = await Promise.all([
-        fetchCurrentWeather(city),
-        fetchForecast(city)
-      ]);
-      
-      setWeather(weatherData);
-      setForecast(forecastData);
-    } catch (error) {
-      setError(error.message);
+      // Simple test without external components
+      console.log('Searching for:', city);
+      setWeather({ city, temp: '25°C', condition: 'Sunny' });
+    } catch (err) {
+      setError(err.message);
     } finally {
       setLoading(false);
     }
   };
 
-  // Auto-refresh weather data every 5 minutes
-  useEffect(() => {
-    if (weather) {
-      const interval = setInterval(() => {
-        handleSearch(weather.city);
-      }, 300000); // 5 minutes
-
-      return () => clearInterval(interval);
-    }
-  }, [weather]);
-
   return (
-    <div className="min-h-screen py-8 px-4">
-      <div className="max-w-4xl mx-auto">
-        <header className="text-center mb-8">
-          <h1 className="text-4xl md:text-6xl font-bold text-white mb-4">
+    <div style={{ minHeight: '100vh', padding: '2rem', color: 'white' }}>
+      <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+        <header style={{ textAlign: 'center', marginBottom: '2rem' }}>
+          <h1 style={{ fontSize: '3rem', marginBottom: '1rem' }}>
             🌤️ Weather Forecast
           </h1>
-          <p className="text-white/80 text-lg">
+          <p style={{ fontSize: '1.2rem', opacity: 0.8 }}>
             Get current weather and 3-day forecast for any city
           </p>
         </header>
 
-        <SearchBar onSearch={handleSearch} loading={loading} />
+        <div style={{ marginBottom: '2rem' }}>
+          <form onSubmit={(e) => {
+            e.preventDefault();
+            const city = e.target.city.value.trim();
+            if (city) handleSearch(city);
+          }}>
+            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+              <input
+                type="text"
+                name="city"
+                placeholder="Enter city name..."
+                style={{
+                  flex: 1,
+                  padding: '0.75rem',
+                  borderRadius: '0.5rem',
+                  border: '1px solid rgba(255,255,255,0.2)',
+                  backgroundColor: 'rgba(255,255,255,0.1)',
+                  color: 'white',
+                  fontSize: '1rem'
+                }}
+                disabled={loading}
+              />
+              <button
+                type="submit"
+                disabled={loading}
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  backgroundColor: 'rgba(255,255,255,0.2)',
+                  border: '1px solid rgba(255,255,255,0.2)',
+                  borderRadius: '0.5rem',
+                  color: 'white',
+                  cursor: loading ? 'not-allowed' : 'pointer',
+                  fontSize: '1rem'
+                }}
+              >
+                {loading ? 'Searching...' : 'Search'}
+              </button>
+            </div>
+          </form>
+        </div>
 
-        {loading && <LoadingSpinner />}
+        {loading && (
+          <div style={{ textAlign: 'center', padding: '2rem' }}>
+            <div style={{ 
+              display: 'inline-block',
+              width: '40px',
+              height: '40px',
+              border: '3px solid rgba(255,255,255,0.3)',
+              borderTop: '3px solid white',
+              borderRadius: '50%',
+              animation: 'spin 1s linear infinite'
+            }}></div>
+            <p style={{ marginTop: '1rem' }}>Loading weather data...</p>
+          </div>
+        )}
 
-        {error && <ErrorMessage message={error} />}
+        {error && (
+          <div style={{
+            backgroundColor: 'rgba(239, 68, 68, 0.2)',
+            border: '1px solid rgba(239, 68, 68, 0.3)',
+            borderRadius: '0.5rem',
+            padding: '1rem',
+            marginBottom: '1rem',
+            color: 'white'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <span>⚠️</span>
+              <span>{error}</span>
+            </div>
+          </div>
+        )}
 
         {weather && !loading && (
-          <>
-            <WeatherCard weather={weather} />
-            <ForecastList forecast={forecast} />
-          </>
+          <div style={{
+            backgroundColor: 'rgba(255,255,255,0.1)',
+            borderRadius: '1rem',
+            padding: '1.5rem',
+            border: '1px solid rgba(255,255,255,0.2)',
+            marginBottom: '1rem'
+          }}>
+            <div style={{ textAlign: 'center' }}>
+              <h2 style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>{weather.city}</h2>
+              <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>☀️</div>
+              <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>{weather.temp}</div>
+              <p style={{ opacity: 0.8, marginBottom: '1rem' }}>{weather.condition}</p>
+              
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', marginTop: '1rem' }}>
+                <div style={{ backgroundColor: 'rgba(255,255,255,0.1)', padding: '0.75rem', borderRadius: '0.5rem', textAlign: 'center' }}>
+                  <div style={{ fontSize: '0.875rem', opacity: 0.7, marginBottom: '0.25rem' }}>Feels Like</div>
+                  <div style={{ fontWeight: 'bold' }}>23°C</div>
+                </div>
+                <div style={{ backgroundColor: 'rgba(255,255,255,0.1)', padding: '0.75rem', borderRadius: '0.5rem', textAlign: 'center' }}>
+                  <div style={{ fontSize: '0.875rem', opacity: 0.7, marginBottom: '0.25rem' }}>Humidity</div>
+                  <div style={{ fontWeight: 'bold' }}>65%</div>
+                </div>
+                <div style={{ backgroundColor: 'rgba(255,255,255,0.1)', padding: '0.75rem', borderRadius: '0.5rem', textAlign: 'center' }}>
+                  <div style={{ fontSize: '0.875rem', opacity: 0.7, marginBottom: '0.25rem' }}>Wind Speed</div>
+                  <div style={{ fontWeight: 'bold' }}>12 km/h</div>
+                </div>
+              </div>
+            </div>
+          </div>
         )}
 
         {!weather && !loading && !error && (
-          <div>
-            {API_KEY === 'YOUR_API_KEY_HERE' ? (
-              <DemoWeather />
-            ) : (
-              <div className="text-center py-12">
-                <div className="text-6xl mb-4">🌍</div>
-                <p className="text-white/80 text-lg">
-                  Enter a city name above to get started
-                </p>
-              </div>
-            )}
+          <div style={{ textAlign: 'center', padding: '3rem 0' }}>
+            <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>🌍</div>
+            <p style={{ fontSize: '1.125rem', opacity: 0.8 }}>
+              Enter a city name above to get started
+            </p>
           </div>
         )}
       </div>

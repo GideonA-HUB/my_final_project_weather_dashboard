@@ -1,7 +1,7 @@
 // OpenWeatherMap API Configuration
 // Get your free API key at: https://openweathermap.org/api
 
-export const API_KEY = process.env.VITE_OPENWEATHER_API_KEY || 'YOUR_API_KEY_HERE';
+export const API_KEY = process.env.VITE_OPENWEATHER_API_KEY || 'a1a382d0b30bd96f5ca006ad5e566448';
 export const API_BASE_URL = 'https://api.openweathermap.org/data/2.5';
 
 // Instructions for setting up API key:
